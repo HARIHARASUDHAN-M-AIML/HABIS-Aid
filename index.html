@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HABIS Aid — TN 108 Real-Time Emergency Intake & AI Auto-Dispatch CAD</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet 1.9.4 CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Clinical Safety & Prototype Notice Bar -->
+  <div class="safety-banner" role="region" aria-label="Clinical Safety & Security Status">
+    <div class="safety-banner__left">
+      <span class="badge-pill badge-pill--red">LIVE CAD ENGINE</span>
+      <span class="safety-banner__text">
+        <strong>Clinical Reference:</strong> WHO-ICRC ABCDE Triage • AIIMS Red/Yellow/Green Protocol • TNHSP 108 Standards. In a real-world emergency, dial <strong>108</strong> or <strong>112</strong>.
+      </span>
+    </div>
+    <div class="safety-banner__right">
+      <span class="telemetry-indicator" title="End-to-End Encrypted Dispatch Session">
+        <span class="pulse-dot pulse-dot--teal"></span>
+        TLS 1.3 Encrypted • NavIC GPS Sync: <strong id="bannerGpsStatus">Ready</strong>
+      </span>
+      <span class="divider-pipe">|</span>
+      <span class="telemetry-clock" id="liveClock">00:00:00 IST</span>
+    </div>
+  </div>
+
+  <!-- Top Navigation & Command Bar -->
+  <header class="top-header">
+    <div class="top-header__brand">
+      <div class="brand-logo" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="8" fill="#0F172A"/>
+          <path d="M14 6V22M6 14H22" stroke="#E11D48" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="14" cy="14" r="3" fill="#14B8A6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title-row">
+          <h1 class="brand-name">HABIS Aid</h1>
+          <span class="brand-subbadge">TN 108 CAD v5.0</span>
+          <span class="security-pill">ISO-27001 / HIPAA Grade UI</span>
+        </div>
+        <p class="brand-subtitle">Tamil Nadu Emergency Intake &amp; Automated Priority Fleet Dispatch</p>
+      </div>
+    </div>
+
+    <!-- Step Progress Indicator / Screen Switcher -->
+    <nav class="screen-nav" aria-label="Dispatch Workflow Steps">
+      <button type="button" class="screen-tab active" id="tabScreen1" data-screen="screen1">
+        <span class="screen-tab__num">1</span>
+        <span class="screen-tab__label">Patient &amp; Location Intake</span>
+      </button>
+      <div class="screen-nav__connector" aria-hidden="true">→</div>
+      <button type="button" class="screen-tab" id="tabScreen2" data-screen="screen2">
+        <span class="screen-tab__num">2</span>
+        <span class="screen-tab__label">Fleet Availability &amp; Auto-Dispatch Hub</span>
+        <span class="screen-tab__counter" id="headerQueueBadge">12 Units Active</span>
+      </button>
+    </nav>
+
+    <div class="top-header__actions">
+      <button type="button" class="btn btn--flow-nav" id="seamlessJumpBtn">
+        <span id="seamlessJumpText">Open Fleet Hub &amp; Live Map →</span>
+      </button>
+      <button type="button" class="btn btn--primary-new" id="newEmergencyReportBtn">
+        + New Emergency Intake
+      </button>
+    </div>
+  </header>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+
+  <!-- ===================================================================== -->
+  <!-- CREATIVE ECG & SATELLITE TELEMETRY LOADING OVERLAY                    -->
+  <!-- ===================================================================== -->
+  <div id="creativeTransitionLoader" class="transition-loader hidden" role="alert" aria-live="assertive">
+    <div class="transition-loader__card">
+      <div class="loader-radar-wrap">
+        <div class="radar-ring radar-ring--1"></div>
+        <div class="radar-ring radar-ring--2"></div>
+        <div class="radar-core">108</div>
+      </div>
+
+      <!-- Animated SVG ECG Heartbeat Line -->
+      <div class="ecg-monitor">
+        <svg viewBox="0 0 500 90" class="ecg-svg" preserveAspectRatio="none">
+          <path class="ecg-grid-line" d="M0 45 H500" />
+          <path class="ecg-wave" d="M0,45 L90,45 L105,30 L120,45 L145,45 L155,75 L170,8 L185,82 L200,45 L230,25 L245,45 L330,45 L345,30 L360,45 L385,45 L395,75 L410,8 L425,82 L440,45 L470,25 L500,45" />
+        </svg>
+      </div>
+
+      <span class="loader-eyebrow" id="loaderEyebrow">WHO-ICRC &amp; AIIMS TRIAGE PROTOCOL ENGINE</span>
+      <h2 class="loader-title" id="loaderMainTitle">Analyzing Patient Acuity &amp; Locking Nearest Unit...</h2>
+      <p class="loader-subtitle" id="loaderSubText">Calculating real-time Haversine distance across ALS, BLS &amp; Neonatal units</p>
+
+      <div class="loader-progress-track">
+        <div class="loader-progress-bar" id="loaderProgressBar"></div>
+      </div>
+
+      <div class="loader-steps-grid">
+        <div class="loader-step active" id="lStep1">✓ ABCDE Vitals Verified</div>
+        <div class="loader-step" id="lStep2">⟳ GIS Coordinates Locked</div>
+        <div class="loader-step" id="lStep3">⟳ Matching ALS / BLS / Neonatal</div>
+        <div class="loader-step" id="lStep4">⟳ Transmitting MDT Packet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- SCREEN 1: DEDICATED PATIENT & REAL LOCATION INTAKE INTERFACE          -->
+  <!-- ===================================================================== -->
+  <main id="screen1" class="workspace-screen active" aria-label="Screen 1: Patient and Location Intake">
+    <div class="intake-hero-bar">
+      <div>
+        <span class="status-tag status-tag--live">STEP 1 OF 2 • HIGH-ACCURACY EMERGENCY INTAKE</span>
+        <h2 class="screen-heading">Enter Patient Condition &amp; Exact Incident Location</h2>
+        <p class="screen-subheading">Complete the clinical observations and lock the real GPS location below. On submission, our AI Triage Engine will automatically match and dispatch the nearest appropriate <strong>ALS, BLS, Neonatal, or First-Responder</strong> unit on the next screen.</p>
+      </div>
+
+      <div class="preset-selector-card">
+        <label for="demoScenarioSelect" class="preset-label">Quick Clinical Test Case:</label>
+        <select id="demoScenarioSelect" class="form-select">
+          <option value="stemi">🔴 RED (CRITICAL): STEMI / Severe Chest Pain — Needs ALS Cardiac</option>
+          <option value="rta">🔴 RED (CRITICAL): Highway Polytrauma &amp; Hemorrhage — Needs ALS Trauma</option>
+          <option value="neonatal">🔴 RED (CRITICAL): Preterm Neonatal / High-Risk Labor — Needs Neonatal ICU</option>
+          <option value="resp">🟡 YELLOW (HIGH): Acute COPD Respiratory Distress — Needs ALS/BLS Oxygen</option>
+          <option value="fracture">🟢 GREEN (STANDARD): Minor Slip &amp; Wrist Fracture — Needs BLS Ortho</option>
+          <option value="blank">⚪ Empty Form (Manual Custom Entry &amp; Real GPS Test)</option>
+        </select>
+      </div>
+    </div>
+
+    <form id="emergencyIntakeForm" class="focused-intake-layout" novalidate>
+      <!-- Inline Validation Alert -->
+      <div id="formErrorBanner" class="form-error-banner hidden" role="alert">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M10 6V10.5M10 13.5H10.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span id="formErrorText">Safety Check Failed: Please complete all mandatory caller, clinical sign, and location fields before auto-dispatch.</span>
+      </div>
+
+      <div class="intake-two-panels">
+        <!-- PANEL A: PATIENT DETAILS & CLINICAL TRIAGE -->
+        <section class="card intake-panel" aria-labelledby="patientPanelTitle">
+          <div class="card-header">
+            <div>
+              <span class="section-eyebrow">CLINICAL INTAKE • WHO-ICRC / AIIMS PROTOCOL</span>
+              <h3 id="patientPanelTitle" class="card-title">1. Caller &amp; Patient Clinical Assessment</h3>
+            </div>
+            <button type="button" class="btn btn--ghost-sm" id="resetIntakeFormBtn">Clear Fields</button>
+          </div>
+
+          <div class="intake-panel__body">
+            <!-- Caller & Patient Demographics -->
+            <div class="form-section">
+              <div class="form-row form-row--2col">
+                <div class="form-group">
+                  <label for="callerName">Caller Full Name <span class="req">*</span></label>
+                  <input type="text" id="callerName" class="form-input" placeholder="e.g., Karthikeyan Sundaram" value="Karthikeyan Sundaram" autocomplete="name" required />
+                  <span class="field-error" id="errCallerName">Caller name is required for callback verification</span>
+                </div>
+                <div class="form-group">
+                  <label for="callerPhone">Verified Callback Number <span class="req">*</span></label>
+                  <input type="tel" id="callerPhone" class="form-input font-mono" placeholder="+91 98401 72410" value="+91 98401 72410" autocomplete="tel" required />
+                  <span class="field-error" id="errCallerPhone">Valid 10-digit Indian mobile number required</span>
+                </div>
+              </div>
+
+              <div class="form-row form-row--3col">
+                <div class="form-group">
+                  <label for="patientName">Patient Name / Identifier</label>
+                  <input type="text" id="patientName" class="form-input" placeholder="e.g., Thiru. Murugesan R." value="Thiru. Murugesan R." />
+                </div>
+                <div class="form-group">
+                  <label for="patientAge">Patient Age Group <span class="req">*</span></label>
+                  <select id="patientAge" class="form-select" required>
+                    <option value="">Select age group...</option>
+                    <option value="Neonate / Infant (< 1 yr)">Neonate / Infant (&lt; 1 yr)</option>
+                    <option value="Pediatric (1–12 yrs)">Pediatric (1–12 yrs)</option>
+                    <option value="Adolescent (13–17 yrs)">Adolescent (13–17 yrs)</option>
+                    <option value="Adult (18–44 yrs)">Adult (18–44 yrs)</option>
+                    <option value="Middle-Aged (45–64 yrs)" selected>Middle-Aged (45–64 yrs)</option>
+                    <option value="Geriatric / Senior (65+ yrs)">Geriatric / Senior (65+ yrs)</option>
+                  </select>
+                  <span class="field-error" id="errPatientAge">Please select patient age group</span>
+                </div>
+                <div class="form-group">
+                  <label for="peopleAffected">Patients Count <span class="req">*</span></label>
+                  <div class="number-stepper">
+                    <button type="button" class="stepper-btn" id="decPeopleBtn" aria-label="Decrease count">−</button>
+                    <input type="number" id="peopleAffected" class="form-input font-mono text-center" min="1" max="50" value="1" required />
+                    <button type="button" class="stepper-btn" id="incPeopleBtn" aria-label="Increase count">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rapid ABCDE Triage Observations -->
+            <div class="form-section">
+              <div class="form-section__header">
+                <h4 class="form-section__title">Primary ABC Triage Assessment (Airway, Breathing, Circulation)</h4>
+                <span class="live-priority-preview" id="livePriorityPreviewBadge">AI Acuity: RED (CRITICAL)</span>
+              </div>
+              <div class="triage-obs-grid">
+                <div class="obs-box">
+                  <span class="obs-box__label">Consciousness (AVPU) / சுயநினைவு</span>
+                  <div class="segmented-control" role="radiogroup" aria-label="Consciousness">
+                    <button type="button" class="seg-btn active" data-obs="consciousness" data-val="Alert &amp; Responsive">Alert</button>
+                    <button type="button" class="seg-btn seg-btn--warn" data-obs="consciousness" data-val="Drowsy / Semi-Conscious">Drowsy</button>
+                    <button type="button" class="seg-btn seg-btn--crit" data-obs="consciousness" data-val="Unconscious / Unresponsive">Unconscious</button>
+                  </div>
+                </div>
+                <div class="obs-box">
+                  <span class="obs-box__label">Breathing Effort / சுவாசம்</span>
+                  <div class="segmented-control" role="radiogroup" aria-label="Breathing">
+                    <button type="button" class="seg-btn" data-obs="breathing" data-val="Normal">Normal</button>
+                    <button type="button" class="seg-btn seg-btn--warn active" data-obs="breathing" data-val="Labored / Shortness of Breath">Labored</button>
+                    <button type="button" class="seg-btn seg-btn--crit" data-obs="breathing" data-val="Absent / Gasping">Absent</button>
+                  </div>
+                </div>
+                <div class="obs-box">
+                  <span class="obs-box__label">Hemorrhage / இரத்தப்போக்கு</span>
+                  <div class="segmented-control" role="radiogroup" aria-label="Severe Bleeding">
+                    <button type="button" class="seg-btn active" data-obs="bleeding" data-val="None">None</button>
+                    <button type="button" class="seg-btn seg-btn--warn" data-obs="bleeding" data-val="Controlled / Minor">Controlled</button>
+                    <button type="button" class="seg-btn seg-btn--crit" data-obs="bleeding" data-val="Uncontrolled Hemorrhage">Severe</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bilingual Clinical Signs & Injury Chips -->
+            <div class="form-section form-section--last">
+              <div class="form-section__header">
+                <div>
+                  <h4 class="form-section__title">Chief Complaint &amp; Clinical Triggers <span class="req">*</span></h4>
+                  <p class="form-section__subtext">Select all observed signs (English / தமிழ்) to determine required ambulance tier (ALS / BLS / Neonatal)</p>
+                </div>
+                <div class="symptom-search-wrap">
+                  <input type="search" id="symptomSearchInput" class="form-input form-input--sm" placeholder="Search symptoms (e.g., Chest, Burn, பிரசவம்)..." />
+                </div>
+              </div>
+
+              <div id="symptomChipsContainer" class="symptom-chips-grid" role="group" aria-label="Clinical symptoms"></div>
+              <span class="field-error" id="errSymptoms">Select at least one clinical symptom or injury trigger</span>
+
+              <div class="form-group" style="margin-top: 14px;">
+                <label for="incidentNotes">Clinical &amp; Scene Access Notes (Optional)</label>
+                <textarea id="incidentNotes" class="form-textarea" rows="2" placeholder="Gate number, floor, vitals if known (SpO2, BP)...">58M clutching chest, diaphoretic (sweating heavily), radiating pain to left jaw. Security guard at Gate 3 waving down ambulance on Cathedral Rd service lane.</textarea>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL B: REAL-TIME GPS & OPENSTREETMAP NOMINATIM LOCATION ENGINE -->
+        <section class="card intake-panel" aria-labelledby="locationPanelTitle">
+          <div class="card-header">
+            <div>
+              <span class="section-eyebrow">REAL-TIME GIS &amp; NOMINATIM GEOCODER</span>
+              <h3 id="locationPanelTitle" class="card-title">2. Exact Incident Location &amp; GPS Lock</h3>
+            </div>
+            <button type="button" class="btn btn--gps-live" id="useCurrentLocationBtn">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="3" fill="currentColor"/>
+                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M8 0.5V2.5M8 13.5V15.5M0.5 8H2.5M13.5 8H15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Detect My Real GPS Location
+            </button>
+          </div>
+
+          <div class="intake-panel__body">
+            <!-- Real Street Search via OpenStreetMap Nominatim -->
+            <div class="form-section">
+              <div class="form-group">
+                <label for="realPlaceSearchInput">Search Any Real Street, Hospital, or Area (Live OpenStreetMap Geocoder)</label>
+                <div class="geocode-search-bar">
+                  <input type="search" id="realPlaceSearchInput" class="form-input" placeholder="Type any real place (e.g., T Nagar Bus Stand, Tambaram, Velachery, Madurai)..." />
+                  <button type="button" class="btn btn--navy-sm" id="searchRealPlaceBtn">Search &amp; Pin</button>
+                </div>
+                <div id="geocodeResultsDropdown" class="geocode-dropdown hidden" role="listbox"></div>
+              </div>
+
+              <div class="form-group" style="margin-top: 10px;">
+                <label for="incidentLocationInput">Verified Dispatch Address &amp; Landmark <span class="req">*</span></label>
+                <input type="text" id="incidentLocationInput" class="form-input" value="Near Gemini Flyover, Cathedral Road Junction, opposite US Consulate Gate 3, Chennai" required />
+                <span class="field-error" id="errLocation">Verified street address is required for ambulance navigation</span>
+              </div>
+
+              <!-- Quick High-Risk Chennai Corridor Presets -->
+              <div class="landmark-presets-row">
+                <span class="landmark-presets-label">Quick Hotspots:</span>
+                <button type="button" class="landmark-pill active" data-lat="13.0524" data-lng="80.2508" data-addr="Near Gemini Flyover, Cathedral Road Junction, opposite US Consulate Gate 3, Chennai" data-zone="Zone 09 • Teynampet / Anna Salai">
+                  Gemini Flyover
+                </button>
+                <button type="button" class="landmark-pill" data-lat="13.0067" data-lng="80.2050" data-addr="Kathipara Urban Square Underpass, GST Road North Ramp, Guindy, Chennai" data-zone="Zone 13 • Guindy Highway Corridor">
+                  Kathipara Guindy
+                </button>
+                <button type="button" class="landmark-pill" data-lat="13.0724" data-lng="80.2602" data-addr="Egmore Pantheon Road outside Govt Museum &amp; IOG Maternity Arch, Chennai" data-zone="Zone 05 • Egmore Central">
+                  Egmore Maternity
+                </button>
+                <button type="button" class="landmark-pill" data-lat="13.0850" data-lng="80.2101" data-addr="Anna Nagar Roundtana Signal, 2nd Avenue East, near Chinthamani, Chennai" data-zone="Zone 08 • Anna Nagar Central">
+                  Anna Nagar
+                </button>
+                <button type="button" class="landmark-pill" data-lat="13.0500" data-lng="80.2824" data-addr="Marina Loop Road near Light House MRTS Station, Mylapore Coast, Chennai" data-zone="Zone 09 • Marina Coastal Sector">
+                  Marina Beach Loop
+                </button>
+              </div>
+            </div>
+
+            <!-- Interactive Leaflet Map with Reverse Geocoding -->
+            <div class="intake-map-wrapper">
+              <div id="intakeMap" class="intake-map" aria-label="Interactive incident pin map"></div>
+              <div class="gis-telemetry-strip">
+                <div class="gis-telemetry-item">
+                  <span class="gis-label">LAT / LNG</span>
+                  <span class="gis-val font-mono" id="intakeCoordDisplay">13.0524° N, 80.2508° E</span>
+                </div>
+                <div class="gis-telemetry-item">
+                  <span class="gis-label">LOCK SOURCE</span>
+                  <span class="gis-val gis-val--teal font-mono" id="intakeGpsAccuracy">±4m NavIC / OSM Verified</span>
+                </div>
+                <div class="gis-telemetry-item">
+                  <span class="gis-label">SECTOR</span>
+                  <span class="gis-val" id="intakeSectorDisplay">Zone 09 • Teynampet / Anna Salai</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Safety Verification & Primary Submit CTA to Transition to Screen 2 -->
+            <div class="intake-submit-box">
+              <div class="safety-check-row">
+                <input type="checkbox" id="dispatcherReviewCheck" checked />
+                <label for="dispatcherReviewCheck">
+                  <strong>Life-Safety Verification:</strong> I confirm the caller callback number, primary ABC status, and pinned location are accurate.
+                </label>
+              </div>
+
+              <button type="submit" class="btn btn--launch-dispatch" id="proceedToAutoDispatchBtn">
+                <span class="btn-launch__icon">⚡</span>
+                <span class="btn-launch__text">
+                  <span class="btn-launch__title">VERIFY INTAKE &amp; LAUNCH AI AUTO-DISPATCH →</span>
+                  <span class="btn-launch__sub">Calculates live ALS / BLS / Neonatal availability &amp; dispatches nearest unit</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </form>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- SCREEN 2: FLEET AVAILABILITY BREAKDOWN & AUTO-DISPATCH HUB            -->
+  <!-- ===================================================================== -->
+  <section id="screen2" class="workspace-screen" aria-label="Screen 2: Fleet Availability and Auto-Dispatch Hub">
+    <!-- Top Command Bar with Back Button & Live Fleet Tier Availability Cards -->
+    <div class="fleet-tier-header">
+      <div class="fleet-tier-header__top">
+        <div class="hub-top-bar__left">
+          <button type="button" class="btn btn--back-intake" id="backToIntakeBtn">
+            ← Back to Patient &amp; Location Intake
+          </button>
+          <div>
+            <span class="status-tag status-tag--teal">STEP 2 OF 2 • LIVE FLEET MATRIX &amp; AUTOMATED PRIORITY DISPATCH</span>
+            <h2 class="screen-heading">Available Ambulance Fleet Breakdown &amp; Active Dispatches</h2>
+          </div>
+        </div>
+        <div class="clinical-ref-pill">
+          <span><strong>Triage Engine:</strong> AIIMS Red/Yellow/Green &amp; WHO-ICRC Protocol Active</span>
+        </div>
+      </div>
+
+      <!-- 5-Card Fleet Category Breakdown (ALS, BLS, Neonatal, First Responder Bike, Receiving ERs) -->
+      <div class="fleet-breakdown-grid" aria-label="Available Ambulance Breakdown by Type">
+        <div class="tier-card tier-card--als">
+          <div class="tier-card__top">
+            <span class="tier-card__badge">ALS • CARDIAC &amp; TRAUMA</span>
+            <span class="tier-card__icon">🚑</span>
+          </div>
+          <div class="tier-card__counts">
+            <span class="tier-card__avail font-mono" id="countAlsAvail">3</span>
+            <span class="tier-card__total">/ <span id="countAlsTotal">4</span> Available</span>
+          </div>
+          <p class="tier-card__equip">Defibrillator, Ventilator, 12-Lead ECG, Hemostatic Kit</p>
+        </div>
+
+        <div class="tier-card tier-card--bls">
+          <div class="tier-card__top">
+            <span class="tier-card__badge">BLS • BASIC LIFE SUPPORT</span>
+            <span class="tier-card__icon">🚐</span>
+          </div>
+          <div class="tier-card__counts">
+            <span class="tier-card__avail font-mono" id="countBlsAvail">2</span>
+            <span class="tier-card__total">/ <span id="countBlsTotal">2</span> Available</span>
+          </div>
+          <p class="tier-card__equip">AED, Medical Oxygen, Vacuum Splints, Spine Board</p>
+        </div>
+
+        <div class="tier-card tier-card--neo">
+          <div class="tier-card__top">
+            <span class="tier-card__badge">NEONATAL &amp; CEmONC ICU</span>
+            <span class="tier-card__icon">👶</span>
+          </div>
+          <div class="tier-card__counts">
+            <span class="tier-card__avail font-mono" id="countNeoAvail">1</span>
+            <span class="tier-card__total">/ <span id="countNeoTotal">2</span> Available</span>
+          </div>
+          <p class="tier-card__equip">Transport Incubator, Neonatal Ventilator, Fetal Doppler</p>
+        </div>
+
+        <div class="tier-card tier-card--bike">
+          <div class="tier-card__top">
+            <span class="tier-card__badge">108 FIRST RESPONDER BIKE</span>
+            <span class="tier-card__icon">🏍️</span>
+          </div>
+          <div class="tier-card__counts">
+            <span class="tier-card__avail font-mono" id="countBikeAvail">2</span>
+            <span class="tier-card__total">/ <span id="countBikeTotal">2</span> Available</span>
+          </div>
+          <p class="tier-card__equip">Narrow-Lane Access, Airway Kit, Portable AED, Tourniquet</p>
+        </div>
+
+        <div class="tier-card tier-card--er">
+          <div class="tier-card__top">
+            <span class="tier-card__badge">GOVT TRAUMA &amp; CATH ERs</span>
+            <span class="tier-card__icon">🏥</span>
+          </div>
+          <div class="tier-card__counts">
+            <span class="tier-card__avail font-mono">22</span>
+            <span class="tier-card__total">Zero-Delay Beds Ready</span>
+          </div>
+          <p class="tier-card__equip">RGGGH • KMCH • Royapettah • IOG Egmore • Omandurar</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-Dispatch Result Banner (Highlights the Just-Dispatched or Matched Case) -->
+    <div class="auto-dispatch-banner" id="autoDispatchResultBanner">
+      <div class="auto-dispatch-banner__left">
+        <div class="auto-dispatch-status-pill">
+          <span class="pulse-dot pulse-dot--coral"></span>
+          <span id="bannerDispatchStatusTitle">AI PRIORITY AUTO-DISPATCH LOCKED</span>
+        </div>
+        <h3 class="auto-dispatch-headline" id="bannerDispatchHeadline">
+          CRITICAL (RED / DELTA-1) → Dispatched Unit <span class="font-mono">108-ALS-04</span> (1.4 km • 4 min ETA)
+        </h3>
+        <p class="auto-dispatch-sub" id="bannerDispatchSub">
+          Patient: Thiru. Murugesan R. (Middle-Aged) • Severe Chest Pain (மாரடைப்பு) • Target ER: RGGGH Cardiac Cath Lab
+        </p>
+      </div>
+      <div class="auto-dispatch-banner__right">
+        <div class="override-control">
+          <label for="manualUnitOverrideSelect">Dispatcher Unit Override:</label>
+          <select id="manualUnitOverrideSelect" class="form-select form-select--sm"></select>
+        </div>
+        <button type="button" class="btn btn--confirm-dispatch" id="reconfirmModalBtn">
+          View MDT Telemetry Packet
+        </button>
+      </div>
+    </div>
+
+    <!-- 3-Column Tactical Operations Hub -->
+    <div class="hub-grid">
+      <!-- COLUMN 1: SEGREGATED CASE QUEUE & LIVE TIMELINE -->
+      <div class="card hub-queue-card">
+        <div class="card-header card-header--compact">
+          <div>
+            <span class="section-eyebrow">PRIORITY INCIDENT QUEUE</span>
+            <h3 class="card-title">Active Dispatches &amp; Triage Queue</h3>
+          </div>
+          <button type="button" class="btn btn--teal-sm" id="hubNewCaseBtn">+ New Intake</button>
+        </div>
+
+        <div class="queue-filter-bar">
+          <input type="search" id="queueSearchInput" class="form-input form-input--sm" placeholder="Filter by Case ID, landmark, or unit..." />
+          <div class="queue-filter-pills" role="group">
+            <button type="button" class="filter-pill active" data-qfilter="all">All</button>
+            <button type="button" class="filter-pill" data-qfilter="Critical">Red (Crit)</button>
+            <button type="button" class="filter-pill" data-qfilter="High">Yellow (High)</button>
+            <button type="button" class="filter-pill" data-qfilter="Standard">Green (Std)</button>
+          </div>
+        </div>
+
+        <div class="segregated-queues-scroll">
+          <div class="queue-group">
+            <div class="queue-group__header queue-group__header--teal">
+              <div class="queue-group__title-wrap">
+                <span class="pulse-dot pulse-dot--teal"></span>
+                <h4>Active Auto-Dispatched Units (En Route / On Scene)</h4>
+              </div>
+              <span class="queue-count-badge font-mono" id="activeDispatchesCountBadge">4</span>
+            </div>
+            <div id="activeQueueList" class="queue-list"></div>
+          </div>
+
+          <div class="queue-group">
+            <div class="queue-group__header queue-group__header--amber">
+              <div class="queue-group__title-wrap">
+                <span class="pulse-dot pulse-dot--amber"></span>
+                <h4>Unassigned Calls Awaiting One-Click Auto-Assign</h4>
+              </div>
+              <span class="queue-count-badge font-mono" id="unassignedCountBadge">2</span>
+            </div>
+            <div id="unassignedQueueList" class="queue-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMN 2: TACTICAL CHENNAI GIS OPERATIONS MATRIX -->
+      <div class="card hub-map-card">
+        <div class="card-header card-header--compact">
+          <div>
+            <span class="section-eyebrow">REAL-TIME HAVERSINE ROUTING &amp; GREEN CORRIDORS</span>
+            <h3 class="card-title">Tactical GIS Fleet &amp; Hospital Matrix</h3>
+          </div>
+          <div class="map-layer-toggles">
+            <button type="button" class="layer-btn active" id="toggleCorridorsBtn">Green Corridors</button>
+            <button type="button" class="layer-btn active" id="toggleHospitalsBtn">Receiving ERs</button>
+            <button type="button" class="layer-btn" id="recenterChennaiBtn">Fit All Units</button>
+          </div>
+        </div>
+
+        <div class="tactical-map-container">
+          <div id="tacticalChennaiMap" class="tactical-map" aria-label="Tactical Chennai GIS Operations Map"></div>
+          <div class="map-legend">
+            <div class="legend-item"><span class="legend-pin legend-pin--crit"></span> Critical Incident</div>
+            <div class="legend-item"><span class="legend-pin legend-pin--amb"></span> ALS / BLS / Neo Unit</div>
+            <div class="legend-item"><span class="legend-pin legend-pin--hosp"></span> Govt Receiving ER</div>
+            <div class="legend-item"><span class="legend-line"></span> Active Green Corridor</div>
+          </div>
+        </div>
+
+        <!-- Selected Case Progression Timeline & Status Updater -->
+        <div class="hub-selected-case-bar" id="hubSelectedCaseBar">
+          <div class="hub-selected-case__info">
+            <div class="hub-selected-case__top">
+              <span class="font-mono hub-case-id" id="hubInspectorCaseId">#TN108-8492</span>
+              <span class="priority-badge priority-badge--critical" id="hubInspectorPriority">CRITICAL</span>
+              <span class="status-badge status-badge--dispatched" id="hubInspectorStatus">Dispatched</span>
+              <span class="hub-case-unit font-mono" id="hubInspectorUnit">Unit: 108-ALS-04</span>
+            </div>
+            <p class="hub-selected-case__loc" id="hubInspectorLocation">
+              Near Gemini Flyover, Cathedral Road Junction, opposite US Consulate Gate 3
+            </p>
+          </div>
+          <div class="hub-selected-case__actions">
+            <select id="hubStatusSelect" class="form-select form-select--sm" aria-label="Update Case Status">
+              <option value="Dispatched" selected>Dispatched</option>
+              <option value="En route">En route</option>
+              <option value="On scene">On scene</option>
+              <option value="Case closed">Case closed (Free Unit)</option>
+            </select>
+            <button type="button" class="btn btn--teal-sm" id="hubUpdateStatusBtn">Update Status</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMN 3: CATEGORIZED FLEET ROSTER & HOSPITAL ER BED MATRIX -->
+      <div class="hub-right-col">
+        <div class="card fleet-panel-card">
+          <div class="card-header card-header--compact">
+            <div>
+              <span class="section-eyebrow">LIVE FLEET ROSTER BY DISTANCE</span>
+              <h3 class="card-title">ALS / BLS / Neonatal / Bike Units</h3>
+            </div>
+            <select id="fleetFilterSelect" class="form-select form-select--xs" aria-label="Filter ambulance fleet">
+              <option value="all">All Categories (10)</option>
+              <option value="Available">Available Only</option>
+              <option value="ALS">ALS Units</option>
+              <option value="BLS">BLS Units</option>
+              <option value="NEONATAL">Neonatal ICU</option>
+              <option value="BIKE">First Responder Bike</option>
+            </select>
+          </div>
+          <div id="fleetPanelList" class="fleet-panel-list"></div>
+        </div>
+
+        <div class="card mdt-er-card">
+          <div class="card-header card-header--compact">
+            <div>
+              <span class="section-eyebrow">GOVT TERTIARY HOSPITAL PRE-ALERT</span>
+              <h3 class="card-title">Receiving ER Bed &amp; Cath Lab Matrix</h3>
+            </div>
+            <span class="badge-pill badge-pill--teal">LIVE TELEMETRY</span>
+          </div>
+
+          <div class="mdt-signal-box">
+            <div class="mdt-signal-row">
+              <span class="mdt-label">ACTIVE MDT UPLINK:</span>
+              <span class="mdt-val font-mono" id="mdtUnitName">108-ALS-04 • Capt. Senthil Kumar</span>
+            </div>
+            <div class="mdt-metrics-grid">
+              <div class="mdt-metric">
+                <span class="mdt-metric__k">NavIC Accuracy</span>
+                <span class="mdt-metric__v font-mono text-teal">±3.6m (Locked)</span>
+              </div>
+              <div class="mdt-metric">
+                <span class="mdt-metric__k">Protocol Tier</span>
+                <span class="mdt-metric__v font-mono" id="mdtProtocolTier">RED • DELTA-1</span>
+              </div>
+              <div class="mdt-metric">
+                <span class="mdt-metric__k">Green Signals</span>
+                <span class="mdt-metric__v font-mono text-teal">Corridor Active</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="er-matrix-list" id="hospitalErMatrix"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- MDT TELEMETRY & SAFETY AUDIT MODAL                                    -->
+  <!-- ===================================================================== -->
+  <div id="dispatchConfirmModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <span class="section-eyebrow">ENCRYPTED MDT TELEMETRY PACKET • AUDIT LOG</span>
+          <h3 id="modalTitle" class="modal-title">Verified Auto-Dispatch &amp; Clinical Handover Summary</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-alert-strip">
+          <span>✓ Life-Safety Audit Passed: GPS Coordinates, Clinical Acuity, and Hospital Pre-Alert synchronized with Ambulance MDT Tablet.</span>
+        </div>
+
+        <div class="modal-summary-grid">
+          <div class="modal-summary-item">
+            <span class="modal-summary-label">CASE ID &amp; TIMESTAMP</span>
+            <span class="modal-summary-val font-mono" id="modalCaseId">#TN108-8495</span>
+          </div>
+          <div class="modal-summary-item">
+            <span class="modal-summary-label">TRIAGE ACUITY (WHO / AIIMS)</span>
+            <span class="modal-summary-val" id="modalPriority">CRITICAL — RED (DELTA-1)</span>
+          </div>
+          <div class="modal-summary-item modal-summary-item--full">
+            <span class="modal-summary-label">VERIFIED GPS INCIDENT LOCATION</span>
+            <span class="modal-summary-val" id="modalLocation">—</span>
+          </div>
+          <div class="modal-summary-item modal-summary-item--full">
+            <span class="modal-summary-label">CLINICAL SIGNS &amp; ABC STATUS</span>
+            <span class="modal-summary-val" id="modalClinicalDetails">—</span>
+          </div>
+          <div class="modal-summary-item">
+            <span class="modal-summary-label">DISPATCHED AMBULANCE UNIT</span>
+            <span class="modal-summary-val font-mono text-teal" id="modalAmbulanceUnit">—</span>
+          </div>
+          <div class="modal-summary-item">
+            <span class="modal-summary-label">RECEIVING HOSPITAL PRE-ALERT</span>
+            <span class="modal-summary-val" id="modalHospitalTarget">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn--ghost" id="cancelDispatchModalBtn">Close Window</button>
+        <button type="button" class="btn btn--confirm-dispatch" id="confirmDispatchModalBtn">
+          ⚡ Acknowledge &amp; Lock MDT Telemetry
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
