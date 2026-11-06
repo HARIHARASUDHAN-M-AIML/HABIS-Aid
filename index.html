@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HABIS Aid — TN 108 Real-Time Emergency Intake & AI Auto-Dispatch CAD</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2318b7b2'/%3E%3Cstop offset='100%25' stop-color='%23064e63'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M32 4 L56 13 V30 C56 46 45.5 56.5 32 61 C18.5 56.5 8 46 8 30 V13 L32 4 Z' fill='url(%23g)'/%3E%3Crect x='26' y='15' width='12' height='34' rx='3.5' fill='%23fff'/%3E%3Crect x='15' y='26' width='34' height='12' rx='3.5' fill='%23fff'/%3E%3Cpath d='M14 32 H24 L27 28 L31 38 L34.5 22 L38 39 L41 30 L43 32 H50' fill='none' stroke='%23086375' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,15 +37,23 @@
   <header class="top-header">
     <div class="top-header__brand">
       <div class="brand-logo" aria-hidden="true">
-        <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
-          <rect width="28" height="28" rx="8" fill="#0F172A"/>
-          <path d="M14 6V22M6 14H22" stroke="#E11D48" stroke-width="3.5" stroke-linecap="round"/>
-          <circle cx="14" cy="14" r="3" fill="#14B8A6"/>
+        <svg width="42" height="42" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="habisShieldGrad" x1="8" y1="4" x2="56" y2="61" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#19B9B3" />
+              <stop offset="55%" stop-color="#0B7A86" />
+              <stop offset="100%" stop-color="#054457" />
+            </linearGradient>
+          </defs>
+          <path d="M32 3.5L56.5 12.8V30.2C56.5 46.4 45.8 57.1 32 61.5C18.2 57.1 7.5 46.4 7.5 30.2V12.8L32 3.5Z" fill="url(#habisShieldGrad)" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+          <rect x="25.5" y="14.5" width="13" height="35" rx="4" fill="#FFFFFF" />
+          <rect x="14.5" y="25.5" width="35" height="13" rx="4" fill="#FFFFFF" />
+          <path d="M13.5 32H23.5L26.2 28.2L29.5 37.5L33.2 21.5L36.8 39L39.8 29.5L41.8 32H50.5" stroke="#086475" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </div>
       <div>
         <div class="brand-title-row">
-          <h1 class="brand-name">HABIS Aid</h1>
+          <h1 class="brand-name">Habisaid</h1>
           <span class="brand-subbadge">TN 108 CAD v5.0</span>
           <span class="security-pill">ISO-27001 / HIPAA Grade UI</span>
         </div>
