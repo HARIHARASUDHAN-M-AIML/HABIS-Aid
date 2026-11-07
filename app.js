@@ -1,11 +1,15 @@
 /**
- * HABIS Aid — TN 108 Emergency CAD & AI Auto-Dispatch Engine v5.2
- * Complete, Self-Contained File (Zero Missing Functions, Safe Map Initialization)
- * - 100% Pure Google Maps Road, Satellite Hybrid & Terrain Tiles
- * - Official Google Maps Places & Geocoding SDK Support + Keyless Exact Road Vector Sync
+ * Habisaid v6.0 — $1M Enterprise 5-Page Emergency CAD & Autonomous Dispatch Engine
+ * Complete, Unbroken Self-Contained Logic
+ * Pages:
+ * - page1: Precision Incident Location Lock (Google Maps + Multi-Sample Hardware GPS)
+ * - page2: Patient Demographics & WHO/AIIMS Clinical Triage
+ * - page3: Live AI Auto-Dispatch & Green Corridor Mission Control
+ * - page4: Fleet Availability Matrix (ALS, BLS, Neonatal, First-Responder Bike)
+ * - page5: Receiving Hospital ER Matrix & Segregated Incident Queue
  */
 
-// 1. Evidence-Based Clinical Signs Dataset (Mapped to Ambulance Tier & Receiving ER)
+// 1. Evidence-Based Clinical Signs Dataset (WHO-ICRC & AIIMS Protocol)
 const CLINICAL_SYMPTOM_CHIPS = [
   { id: 'chest_pain', en: 'Severe Chest Pain (STEMI)', ta: 'மாரடைப்பு / நெஞ்சு வலி', severity: 'Critical', requiredTier: 'ALS', code: 'RED • DELTA-1 STEMI', hospital: 'RGGGH Cardiac Cath Lab' },
   { id: 'unconscious', en: 'Unconscious / Coma', ta: 'சுயநினைவின்மை', severity: 'Critical', requiredTier: 'ALS', code: 'RED • DELTA-1 AIRWAY', hospital: 'RGGGH Zero-Delay Trauma & Neuro Ward' },
@@ -22,7 +26,7 @@ const CLINICAL_SYMPTOM_CHIPS = [
   { id: 'dehydration', en: 'Dehydration / Heat Exhaustion', ta: 'நீர்ச்சத்து குறைபாடு', severity: 'Standard', requiredTier: 'BLS', code: 'GREEN • ALPHA-3 MEDICAL', hospital: 'Omandurar Govt Multi-Super Specialty ER' }
 ];
 
-// 2. Built-in Instant Real Tamil Nadu & Chennai Gazetteer
+// 2. Built-in Instant Tamil Nadu & Chennai Gazetteer
 const INSTANT_TN_GAZETTEER = [
   { name: 'Jahir Hussain Street, Pozhichalur / Pammal', address: 'Jahir Hussain St, near Kumaran St & 30 Feet Rd, Pozhichalur, Pallavaram, Chennai 600074', lat: 12.98245, lng: 80.13562, zone: 'Sector • Pozhichalur / Pallavaram' },
   { name: 'T. Nagar Bus Terminus & Panagal Park', address: 'Usman Road, Thyagaraya Nagar (T. Nagar), Chennai, Tamil Nadu 600017', lat: 13.0418, lng: 80.2341, zone: 'Zone 10 • T. Nagar Commercial Sector' },
@@ -36,12 +40,10 @@ const INSTANT_TN_GAZETTEER = [
   { name: 'Adyar Signal & Malar Hospital Junction', address: 'Sardar Patel Road & LB Road Junction, Adyar, Chennai 600020', lat: 13.0063, lng: 80.2574, zone: 'Zone 13 • Adyar / Besant Nagar' },
   { name: 'Sholinganallur OMR IT Expressway Junction', address: 'Rajiv Gandhi Salai (OMR) & ECR Link Road, Sholinganallur, Chennai 600119', lat: 12.9010, lng: 80.2279, zone: 'Zone 15 • OMR IT Corridor' },
   { name: 'Marina Beach Light House & Loop Road', address: 'Kamarajar Salai, Mylapore Coast, Chennai 600004', lat: 13.0398, lng: 80.2794, zone: 'Zone 09 • Marina Coastal Sector' },
-  { name: 'Egmore Railway Station & IOG Maternity Hospital', address: 'Pantheon Road / EVR Periyar Salai, Egmore, Chennai 600008', lat: 13.0732, lng: 80.2602, zone: 'Zone 05 • Egmore Central' },
-  { name: 'Chromepet MIT Flyover & GH', address: 'GST Road, Chromepet, Chennai, Tamil Nadu 600044', lat: 12.9516, lng: 80.1462, zone: 'South Corridor • Chromepet' },
-  { name: 'Porur Toll Plaza & Ramachandra Hospital Arch', address: 'Mount Poonamallee High Road, Porur, Chennai 600116', lat: 13.0382, lng: 80.1565, zone: 'Zone 11 • Porur West Sector' }
+  { name: 'Egmore Railway Station & IOG Maternity Hospital', address: 'Pantheon Road / EVR Periyar Salai, Egmore, Chennai 600008', lat: 13.0732, lng: 80.2602, zone: 'Zone 05 • Egmore Central' }
 ];
 
-// 3. Quick Clinical Test Cases
+// 3. Clinical Preset Scenarios
 const DEMO_SCENARIOS = {
   stemi: {
     callerName: 'Karthikeyan Sundaram',
@@ -143,175 +145,27 @@ const DEMO_SCENARIOS = {
 
 // 4. Categorized Ambulance Fleet (ALS, BLS, NEONATAL, BIKE)
 const AMBULANCE_FLEET = [
-  {
-    id: '108-ALS-04',
-    type: 'ALS',
-    typeLabel: 'ALS • Cardiac & Trauma',
-    availability: 'Available',
-    baseLocation: 'Anna Salai — DMS Teynampet Standby',
-    lat: 13.0465,
-    lng: 80.2462,
-    distanceKm: 0.9,
-    etaMin: 3,
-    crew: 'Capt. Senthil Kumar & EMT Divya',
-    equipment: 'Biphasic Defibrillator • Ventilator • 12-Lead ECG'
-  },
-  {
-    id: '108-ALS-09',
-    type: 'ALS',
-    typeLabel: 'ALS • Highway Polytrauma',
-    availability: 'Available',
-    baseLocation: 'Guindy Kathipara Trauma Outpost',
-    lat: 13.0102,
-    lng: 80.2125,
-    distanceKm: 2.3,
-    etaMin: 6,
-    crew: 'Capt. Rajesh Kannan & EMT Vignesh',
-    equipment: 'Defibrillator • Ventilator • Hemostatic & Spine Kit'
-  },
-  {
-    id: '108-ALS-07',
-    type: 'ALS',
-    typeLabel: 'ALS • Respiratory & Neuro',
-    availability: 'Available',
-    baseLocation: 'Kilpauk MCH Gate 2 Standby',
-    lat: 13.0785,
-    lng: 80.2410,
-    distanceKm: 3.1,
-    etaMin: 7,
-    crew: 'Capt. Aravind Swamy & EMT Priya',
-    equipment: 'BiPAP / Ventilator • Stroke Pre-Alert Telemetry'
-  },
-  {
-    id: '108-ALS-02',
-    type: 'ALS',
-    typeLabel: 'ALS • Cardiac Mobile ICU',
-    availability: 'Dispatched',
-    baseLocation: 'En Route → Central Station / RGGGH',
-    lat: 13.0818,
-    lng: 80.2740,
-    distanceKm: 4.1,
-    etaMin: 4,
-    crew: 'Capt. Mohammed Farook & EMT Kavitha',
-    equipment: 'Defibrillator • Ventilator • Syringe Infusion Pumps'
-  },
-  {
-    id: '108-BLS-12',
-    type: 'BLS',
-    typeLabel: 'BLS • Basic Life Support',
-    availability: 'Available',
-    baseLocation: 'Santhome High Road / Mylapore Sector',
-    lat: 13.0389,
-    lng: 80.2765,
-    distanceKm: 2.8,
-    etaMin: 6,
-    crew: 'Pilot Manikandan & EMT Saravanan',
-    equipment: 'AED • Medical Oxygen • Vacuum Splints'
-  },
-  {
-    id: '108-BLS-15',
-    type: 'BLS',
-    typeLabel: 'BLS • Ortho & Medical Support',
-    availability: 'Available',
-    baseLocation: 'T. Nagar Panagal Park Standby',
-    lat: 13.0418,
-    lng: 80.2341,
-    distanceKm: 2.1,
-    etaMin: 5,
-    crew: 'Pilot Murugan & EMT Karthik',
-    equipment: 'AED • Oxygen Cylinder • Spine Immobilizer'
-  },
-  {
-    id: '108-NEO-01',
-    type: 'NEONATAL',
-    typeLabel: 'NEONATAL • NICU Incubator',
-    availability: 'Available',
-    baseLocation: 'Egmore IOG & Children Hospital Gate',
-    lat: 13.0732,
-    lng: 80.2588,
-    distanceKm: 2.4,
-    etaMin: 5,
-    crew: 'Capt. Bala Murugan & Neonatal Nurse Revathi',
-    equipment: 'Transport Incubator • Neonatal Ventilator • Doppler'
-  },
-  {
-    id: '108-NEO-03',
-    type: 'NEONATAL',
-    typeLabel: 'NEONATAL • CEmONC Maternal',
-    availability: 'Dispatched',
-    baseLocation: 'On Scene → Triplicane Kasturba Hospital',
-    lat: 13.0585,
-    lng: 80.2750,
-    distanceKm: 2.7,
-    etaMin: 0,
-    crew: 'Capt. Sathish & EMT Meena',
-    equipment: 'Incubator • CEmONC Delivery Kit'
-  },
-  {
-    id: '108-BIKE-01',
-    type: 'BIKE',
-    typeLabel: 'BIKE • Rapid First Responder',
-    availability: 'Available',
-    baseLocation: 'Mount Road LIC Junction Patrol',
-    lat: 13.0620,
-    lng: 80.2640,
-    distanceKm: 1.5,
-    etaMin: 3,
-    crew: 'Paramedic Rider Gautham',
-    equipment: 'Portable AED • Airway Bag • Hemostatic Gauze'
-  },
-  {
-    id: '108-BIKE-02',
-    type: 'BIKE',
-    typeLabel: 'BIKE • High-Density Traffic Unit',
-    availability: 'Available',
-    baseLocation: 'Mylapore Luz Corner Standby',
-    lat: 13.0335,
-    lng: 80.2680,
-    distanceKm: 2.5,
-    etaMin: 5,
-    crew: 'Paramedic Rider Naveen',
-    equipment: 'Portable AED • Oxygen Mini-Cylinder • Trauma Kit'
-  }
+  { id: '108-ALS-04', type: 'ALS', typeLabel: 'ALS • Cardiac & Trauma', availability: 'Available', baseLocation: 'Anna Salai — DMS Teynampet Standby', lat: 13.0465, lng: 80.2462, distanceKm: 0.9, etaMin: 3, crew: 'Capt. Senthil Kumar & EMT Divya', equipment: 'Biphasic Defibrillator • Ventilator • 12-Lead ECG' },
+  { id: '108-ALS-09', type: 'ALS', typeLabel: 'ALS • Highway Polytrauma', availability: 'Available', baseLocation: 'Guindy Kathipara Trauma Outpost', lat: 13.0102, lng: 80.2125, distanceKm: 2.3, etaMin: 6, crew: 'Capt. Rajesh Kannan & EMT Vignesh', equipment: 'Defibrillator • Ventilator • Hemostatic & Spine Kit' },
+  { id: '108-ALS-07', type: 'ALS', typeLabel: 'ALS • Respiratory & Neuro', availability: 'Available', baseLocation: 'Kilpauk MCH Gate 2 Standby', lat: 13.0785, lng: 80.2410, distanceKm: 3.1, etaMin: 7, crew: 'Capt. Aravind Swamy & EMT Priya', equipment: 'BiPAP / Ventilator • Stroke Pre-Alert Telemetry' },
+  { id: '108-ALS-02', type: 'ALS', typeLabel: 'ALS • Cardiac Mobile ICU', availability: 'Dispatched', baseLocation: 'En Route → Central Station / RGGGH', lat: 13.0818, lng: 80.2740, distanceKm: 4.1, etaMin: 4, crew: 'Capt. Mohammed Farook & EMT Kavitha', equipment: 'Defibrillator • Ventilator • Syringe Infusion Pumps' },
+  { id: '108-BLS-12', type: 'BLS', typeLabel: 'BLS • Basic Life Support', availability: 'Available', baseLocation: 'Santhome High Road / Mylapore Sector', lat: 13.0389, lng: 80.2765, distanceKm: 2.8, etaMin: 6, crew: 'Pilot Manikandan & EMT Saravanan', equipment: 'AED • Medical Oxygen • Vacuum Splints' },
+  { id: '108-BLS-15', type: 'BLS', typeLabel: 'BLS • Ortho & Medical Support', availability: 'Available', baseLocation: 'T. Nagar Panagal Park Standby', lat: 13.0418, lng: 80.2341, distanceKm: 2.1, etaMin: 5, crew: 'Pilot Murugan & EMT Karthik', equipment: 'AED • Oxygen Cylinder • Spine Immobilizer' },
+  { id: '108-NEO-01', type: 'NEONATAL', typeLabel: 'NEONATAL • NICU Incubator', availability: 'Available', baseLocation: 'Egmore IOG & Children Hospital Gate', lat: 13.0732, lng: 80.2588, distanceKm: 2.4, etaMin: 5, crew: 'Capt. Bala Murugan & Neonatal Nurse Revathi', equipment: 'Transport Incubator • Neonatal Ventilator • Doppler' },
+  { id: '108-NEO-03', type: 'NEONATAL', typeLabel: 'NEONATAL • CEmONC Maternal', availability: 'Dispatched', baseLocation: 'On Scene → Triplicane Kasturba Hospital', lat: 13.0585, lng: 80.2750, distanceKm: 2.7, etaMin: 0, crew: 'Capt. Sathish & EMT Meena', equipment: 'Incubator • CEmONC Delivery Kit' },
+  { id: '108-BIKE-01', type: 'BIKE', typeLabel: 'BIKE • Rapid First Responder', availability: 'Available', baseLocation: 'Mount Road LIC Junction Patrol', lat: 13.0620, lng: 80.2640, distanceKm: 1.5, etaMin: 3, crew: 'Paramedic Rider Gautham', equipment: 'Portable AED • Airway Bag • Hemostatic Gauze' },
+  { id: '108-BIKE-02', type: 'BIKE', typeLabel: 'BIKE • High-Density Traffic Unit', availability: 'Available', baseLocation: 'Mylapore Luz Corner Standby', lat: 13.0335, lng: 80.2680, distanceKm: 2.5, etaMin: 5, crew: 'Paramedic Rider Naveen', equipment: 'Portable AED • Oxygen Mini-Cylinder • Trauma Kit' }
 ];
 
 // 5. Receiving Government Hospitals Matrix
 const RECEIVING_HOSPITALS = [
-  {
-    id: 'RGGGH',
-    name: 'Rajiv Gandhi Govt General Hospital (RGGGH)',
-    specialty: 'Level-1 Trauma, 24x7 STEMI Cath Lab & Stroke Code',
-    lat: 13.0815,
-    lng: 80.2772,
-    bedsText: '6 ICU • 8 Trauma Ready'
-  },
-  {
-    id: 'KMCH',
-    name: 'Kilpauk Medical College Hospital (KMCH)',
-    specialty: 'Tertiary Burns ICU, Respiratory & Acute Medical',
-    lat: 13.0786,
-    lng: 80.2435,
-    bedsText: '5 ER • 4 Burns ICU Ready'
-  },
-  {
-    id: 'GRH',
-    name: 'Govt Royapettah Hospital (GRH)',
-    specialty: 'Polytrauma, Hemorrhage Control & Ortho Surgery',
-    lat: 13.0548,
-    lng: 80.2647,
-    bedsText: '6 Trauma Bays Ready'
-  },
-  {
-    id: 'IOG',
-    name: 'Institute of Obstetrics & Gynaecology (IOG Egmore)',
-    specialty: 'CEmONC Maternal & Level-3 Neonatal NICU',
-    lat: 13.0728,
-    lng: 80.2610,
-    bedsText: '4 NICU Incubators Ready'
-  }
+  { id: 'RGGGH', name: 'Rajiv Gandhi Govt General Hospital (RGGGH)', specialty: 'Level-1 Trauma, 24x7 STEMI Cath Lab & Stroke Code', lat: 13.0815, lng: 80.2772, bedsText: '6 ICU • 8 Trauma Ready' },
+  { id: 'KMCH', name: 'Kilpauk Medical College Hospital (KMCH)', specialty: 'Tertiary Burns ICU, Respiratory & Acute Medical', lat: 13.0786, lng: 80.2435, bedsText: '5 ER • 4 Burns ICU Ready' },
+  { id: 'GRH', name: 'Govt Royapettah Hospital (GRH)', specialty: 'Polytrauma, Hemorrhage Control & Ortho Surgery', lat: 13.0548, lng: 80.2647, bedsText: '6 Trauma Bays Ready' },
+  { id: 'IOG', name: 'Institute of Obstetrics & Gynaecology (IOG Egmore)', specialty: 'CEmONC Maternal & Level-3 Neonatal NICU', lat: 13.0728, lng: 80.2610, bedsText: '4 NICU Incubators Ready' }
 ];
 
-// 6. Initial Active & Unassigned Case Queue
+// 6. Active & Unassigned Case Queue
 let INCIDENT_CASES = [
   {
     id: '#TN108-8489',
@@ -383,9 +237,8 @@ let INCIDENT_CASES = [
   }
 ];
 
-// Application State
 const state = {
-  currentScreen: 'screen1',
+  currentPage: 'page1',
   selectedSymptoms: new Set(['chest_pain', 'sweating_diaph']),
   observations: {
     consciousness: 'Alert & Responsive',
@@ -408,7 +261,6 @@ const state = {
   isSubmittingLock: false
 };
 
-// Leaflet Map Instances
 let intakeMap = null;
 let intakeMarker = null;
 let tacticalMap = null;
@@ -416,8 +268,7 @@ let tacticalMarkersLayer = null;
 let tacticalCorridorsLayer = null;
 let tacticalHospitalsLayer = null;
 
-// Google Maps SDK State
-let GOOGLE_MAPS_API_KEY = localStorage.getItem('HABIS Aid_GOOGLE_API_KEY') || '';
+let GOOGLE_MAPS_API_KEY = localStorage.getItem('RAPIDAID_GOOGLE_API_KEY') || '';
 let googleMapsReady = false;
 let googleGeocoder = null;
 let googleAutocompleteService = null;
@@ -427,7 +278,7 @@ let activeSearchAbortController = null;
 let currentDropdownIndex = -1;
 
 // ============================================================================
-// SECURITY HELPER: SANITIZE USER INPUT AGAINST XSS
+// SECURITY & HAVERSINE DISTANCE UTILITIES
 // ============================================================================
 function sanitizeHTML(str) {
   if (!str) return '';
@@ -439,9 +290,6 @@ function sanitizeHTML(str) {
     .replace(/'/g, '&#039;');
 }
 
-// ============================================================================
-// REAL-TIME HAVERSINE DISTANCE CALCULATOR (KM)
-// ============================================================================
 function calculateHaversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -473,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSymptomChips();
     initObservationButtons();
     initFormAndGeocoderListeners();
-    initScreenNavigation();
+    initMultiPageNavigation();
     initIntakeMap();
     initTacticalChennaiMap();
     recalculateClinicalTriage();
@@ -485,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHubControls();
     initModalControls();
   } catch (err) {
-    console.error('Initialization warning:', err);
+    console.error('Initialization notice:', err);
   }
 });
 
@@ -526,91 +374,146 @@ function updateLiveEtaDisplays() {
 }
 
 // ============================================================================
-// SCREEN NAVIGATION & CREATIVE BIOMETRIC TRANSITION LOADER
+// 5-PAGE MULTI-VIEW NAVIGATION & QUANTUM PORTAL TRANSITIONS
 // ============================================================================
-function initScreenNavigation() {
-  const tab1 = document.getElementById('tabScreen1');
-  const tab2 = document.getElementById('tabScreen2');
-  const jumpBtn = document.getElementById('seamlessJumpBtn');
-  const backBtn = document.getElementById('backToIntakeBtn');
-  const newEmergencyBtn = document.getElementById('newEmergencyReportBtn');
-  const hubNewCaseBtn = document.getElementById('hubNewCaseBtn');
-
-  if (tab1) tab1.addEventListener('click', () => switchScreen('screen1'));
-  if (tab2) tab2.addEventListener('click', () => switchScreen('screen2'));
-
-  if (jumpBtn) {
-    jumpBtn.addEventListener('click', () => {
-      switchScreen(state.currentScreen === 'screen1' ? 'screen2' : 'screen1');
+function initMultiPageNavigation() {
+  // Top Dock Buttons
+  document.querySelectorAll('.nav-dock__item').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetPage = btn.getAttribute('data-page');
+      navigateWithPortal(targetPage, 'Synchronizing Workspace View...');
     });
-  }
+  });
 
-  if (backBtn) backBtn.addEventListener('click', () => switchScreen('screen1'));
+  // Brand Home Click
+  document.getElementById('brandHomeTrigger')?.addEventListener('click', () => {
+    navigateWithPortal('page1', 'Returning to Precision Location Lock...');
+  });
 
-  if (newEmergencyBtn) {
-    newEmergencyBtn.addEventListener('click', () => {
-      switchScreen('screen1');
-      document.getElementById('callerName')?.focus();
-      showToast('Ready for new patient & location intake on Screen 1.');
-    });
-  }
+  // Page 1 -> Page 2 Button
+  document.getElementById('toPage2Btn')?.addEventListener('click', () => {
+    const locVal = document.getElementById('incidentLocationInput')?.value.trim();
+    if (!locVal) {
+      document.getElementById('errLocation')?.classList.add('visible');
+      showToast('Please enter or pin the emergency street location first.', true);
+      return;
+    }
+    document.getElementById('errLocation')?.classList.remove('visible');
+    navigateWithPortal('page2', 'Location Locked • Loading Clinical Triage Protocol...');
+  });
 
-  if (hubNewCaseBtn) {
-    hubNewCaseBtn.addEventListener('click', () => {
-      switchScreen('screen1');
-      document.getElementById('callerName')?.focus();
-    });
-  }
+  // Back Buttons & Quick Links
+  document.getElementById('backToPage1Btn')?.addEventListener('click', () => {
+    switchPageInstant('page1');
+  });
+
+  document.getElementById('backToPage2Btn')?.addEventListener('click', () => {
+    switchPageInstant('page2');
+  });
+
+  document.getElementById('goToFleetMatrixBtn')?.addEventListener('click', () => {
+    navigateWithPortal('page4', 'Loading Real-Time ALS / BLS / Neonatal Fleet Matrix...');
+  });
+
+  document.getElementById('fleetToDispatchBtn')?.addEventListener('click', () => {
+    switchPageInstant('page3');
+  });
+
+  document.getElementById('newEmergencyReportBtn')?.addEventListener('click', () => {
+    navigateWithPortal('page1', 'Initializing New Emergency Intake Session...');
+  });
+
+  document.getElementById('hubNewCaseBtn')?.addEventListener('click', () => {
+    navigateWithPortal('page1', 'Initializing New Emergency Intake Session...');
+  });
 }
 
-function switchScreen(targetScreen) {
-  state.currentScreen = targetScreen;
-  const s1 = document.getElementById('screen1');
-  const s2 = document.getElementById('screen2');
-  const tab1 = document.getElementById('tabScreen1');
-  const tab2 = document.getElementById('tabScreen2');
-  const jumpText = document.getElementById('seamlessJumpText');
+function switchPageInstant(targetPageId) {
+  state.currentPage = targetPageId;
 
-  if (targetScreen === 'screen1') {
-    s1.classList.add('active');
-    s2.classList.remove('active');
-    tab1.classList.add('active');
-    tab2.classList.remove('active');
-    if (jumpText) jumpText.textContent = 'Open Fleet Hub & Live Map →';
+  document.querySelectorAll('.page-view').forEach((p) => {
+    p.classList.toggle('active', p.id === targetPageId);
+  });
+
+  document.querySelectorAll('.nav-dock__item').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-page') === targetPageId);
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (targetPageId === 'page1') {
     setTimeout(() => {
       if (intakeMap) intakeMap.invalidateSize();
-    }, 150);
-  } else {
-    s1.classList.remove('active');
-    s2.classList.add('active');
-    tab1.classList.remove('active');
-    tab2.classList.add('active');
-    if (jumpText) jumpText.textContent = '← Back to Patient & Location Intake';
+    }, 160);
+  } else if (targetPageId === 'page3') {
     updateFleetBreakdownCards();
-    renderHubQueues();
-    renderFleetPanel();
     populateManualOverrideDropdown();
     setTimeout(() => {
       if (tacticalMap) {
         tacticalMap.invalidateSize();
         renderTacticalMapLayers();
       }
-    }, 150);
+    }, 160);
+  } else if (targetPageId === 'page4') {
+    updateFleetBreakdownCards();
+    renderFleetPanel();
+  } else if (targetPageId === 'page5') {
+    renderHubQueues();
+    renderHospitalErMatrix();
   }
 }
 
+/**
+ * Smooth Creative Portal Transition between pages
+ */
+function navigateWithPortal(targetPageId, customHeadline = 'Synchronizing Telemetry...', durationMs = 680) {
+  if (state.currentPage === targetPageId) return;
+
+  const loader = document.getElementById('creativeTransitionLoader');
+  const bar = document.getElementById('loaderProgressBar');
+  const mainTitle = document.getElementById('loaderMainTitle');
+  const subText = document.getElementById('loaderSubText');
+  const checklist = document.getElementById('portalChecklistWrap');
+
+  if (!loader) {
+    switchPageInstant(targetPageId);
+    return;
+  }
+
+  checklist.style.display = 'none';
+  loader.classList.remove('hidden');
+  bar.style.width = '35%';
+  mainTitle.textContent = customHeadline;
+  subText.textContent = ` Encrypted CAD Handshake • Sector ${state.intakeSector}`;
+
+  setTimeout(() => {
+    bar.style.width = '100%';
+  }, Math.floor(durationMs * 0.45));
+
+  setTimeout(() => {
+    switchPageInstant(targetPageId);
+    loader.classList.add('hidden');
+    checklist.style.display = 'grid';
+  }, durationMs);
+}
+
+/**
+ * Full 4-Stage Quantum ECG Transition when launching AI Auto-Dispatch (Page 2 -> Page 3)
+ */
 function runCreativeAutoDispatchTransition(onComplete) {
   const loader = document.getElementById('creativeTransitionLoader');
   const bar = document.getElementById('loaderProgressBar');
   const mainTitle = document.getElementById('loaderMainTitle');
   const subText = document.getElementById('loaderSubText');
+  const checklist = document.getElementById('portalChecklistWrap');
   const s1 = document.getElementById('lStep1');
   const s2 = document.getElementById('lStep2');
   const s3 = document.getElementById('lStep3');
   const s4 = document.getElementById('lStep4');
 
+  checklist.style.display = 'grid';
   loader.classList.remove('hidden');
-  bar.style.width = '20%';
+  bar.style.width = '22%';
   s1.classList.add('active');
   s2.classList.remove('active');
   s3.classList.remove('active');
@@ -620,33 +523,33 @@ function runCreativeAutoDispatchTransition(onComplete) {
   subText.textContent = `Locking GPS Coordinates (${state.intakeLat.toFixed(5)}°N, ${state.intakeLng.toFixed(5)}°E)...`;
 
   setTimeout(() => {
-    bar.style.width = '52%';
+    bar.style.width = '54%';
     s2.classList.add('active');
     mainTitle.textContent = `Scanning Available ${state.requiredTier} & First-Responder Fleet...`;
     subText.textContent = `Computing real-time Haversine road distance across Chennai sectors`;
-  }, 480);
+  }, 460);
 
   setTimeout(() => {
-    bar.style.width = '82%';
+    bar.style.width = '84%';
     s3.classList.add('active');
     const matched = findOptimalAvailableUnit(state.requiredTier, state.intakeLat, state.intakeLng);
     mainTitle.textContent = `Matched Nearest Unit: ${matched.id} (${matched.distanceKm} km • ${matched.etaMin} min ETA)`;
     subText.textContent = `Pre-alerting ${state.targetHospital} & activating Green Corridor`;
-  }, 980);
+  }, 940);
 
   setTimeout(() => {
     bar.style.width = '100%';
     s4.classList.add('active');
-  }, 1350);
+  }, 1300);
 
   setTimeout(() => {
     loader.classList.add('hidden');
     if (typeof onComplete === 'function') onComplete();
-  }, 1600);
+  }, 1550);
 }
 
 // ============================================================================
-// SCREEN 1: CLINICAL TRIAGE ENGINE
+// CLINICAL TRIAGE ENGINE
 // ============================================================================
 function renderSymptomChips(filterText = '') {
   const container = document.getElementById('symptomChipsContainer');
@@ -659,7 +562,7 @@ function renderSymptomChips(filterText = '') {
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div style="grid-column:1/-1;padding:10px;color:#64748b;font-size:12.5px;">No matching clinical triggers found. Try "Chest", "Bleeding", "Neonatal", or "மாரடைப்பு".</div>`;
+    container.innerHTML = `<div style="grid-column:1/-1;padding:12px;color:#64748b;font-size:13.5px;">No matching clinical triggers found. Try "Chest", "Bleeding", "Neonatal", or "மாரடைப்பு".</div>`;
     return;
   }
 
@@ -762,19 +665,22 @@ function recalculateClinicalTriage() {
   state.targetHospital = hospital;
 
   const previewBadge = document.getElementById('livePriorityPreviewBadge');
+  const previewHosp = document.getElementById('liveHospitalPreviewText');
+  if (previewHosp) previewHosp.textContent = `Target ER: ${hospital}`;
+
   if (previewBadge) {
     if (prio === 'Critical') {
-      previewBadge.textContent = `AI Acuity: RED (CRITICAL) • Needs ${tier}`;
+      previewBadge.textContent = `RED (CRITICAL) • Needs ${tier}`;
       previewBadge.style.background = '#ffe4e6';
       previewBadge.style.color = '#be123c';
       previewBadge.style.borderColor = '#e11d48';
     } else if (prio === 'High') {
-      previewBadge.textContent = `AI Acuity: YELLOW (HIGH) • Needs ${tier}`;
+      previewBadge.textContent = `YELLOW (HIGH) • Needs ${tier}`;
       previewBadge.style.background = '#fef3c7';
       previewBadge.style.color = '#b45309';
       previewBadge.style.borderColor = '#d97706';
     } else {
-      previewBadge.textContent = `AI Acuity: GREEN (STANDARD) • Needs ${tier}`;
+      previewBadge.textContent = `GREEN (STANDARD) • Needs ${tier}`;
       previewBadge.style.background = '#ccfbf1';
       previewBadge.style.color = '#0f766e';
       previewBadge.style.borderColor = '#0d9488';
@@ -804,7 +710,7 @@ function findOptimalAvailableUnit(requiredTier, lat, lng) {
 }
 
 // ============================================================================
-// 100% GOOGLE LOCATION SERVICES ENGINE
+// GOOGLE LOCATION SERVICES & MULTI-SAMPLE HARDWARE GPS ENGINE
 // ============================================================================
 function loadGoogleMapsSdk(apiKey) {
   return new Promise((resolve, reject) => {
@@ -832,10 +738,10 @@ function loadGoogleMapsSdk(apiKey) {
         initGoogleServicesInstances();
         resolve(true);
       } else {
-        reject(new Error('Google Maps SDK failed to initialize'));
+        reject(new Error('Google Maps SDK failed'));
       }
     };
-    script.onerror = () => reject(new Error('Invalid Google Maps API Key or Network Error'));
+    script.onerror = () => reject(new Error('Invalid Google API Key'));
     document.head.appendChild(script);
   });
 }
@@ -851,41 +757,6 @@ function initGoogleServicesInstances() {
 function initFormAndGeocoderListeners() {
   if (GOOGLE_MAPS_API_KEY) {
     loadGoogleMapsSdk(GOOGLE_MAPS_API_KEY).catch(() => {});
-  }
-
-  const locHeader = document.querySelector('[aria-labelledby="locationPanelTitle"] .card-header');
-  if (locHeader && !document.getElementById('setGoogleKeyBtn')) {
-    const keyBtn = document.createElement('button');
-    keyBtn.type = 'button';
-    keyBtn.id = 'setGoogleKeyBtn';
-    keyBtn.className = 'btn btn--ghost-sm';
-    keyBtn.style.marginLeft = 'auto';
-    keyBtn.style.marginRight = '8px';
-    keyBtn.innerHTML = GOOGLE_MAPS_API_KEY ? '🟢 Google API Connected' : '🔑 Connect Google API Key';
-    keyBtn.addEventListener('click', async () => {
-      const entered = prompt(
-        'Enter your Google Maps JavaScript API Key (with Places & Geocoding enabled) for 100% Native Google Location Services:\n\n(Leave blank to use Keyless Google Map Tile Sync)',
-        GOOGLE_MAPS_API_KEY
-      );
-      if (entered === null) return;
-      GOOGLE_MAPS_API_KEY = entered.trim();
-      if (GOOGLE_MAPS_API_KEY) {
-        localStorage.setItem('HABIS Aid_GOOGLE_API_KEY', GOOGLE_MAPS_API_KEY);
-        try {
-          await loadGoogleMapsSdk(GOOGLE_MAPS_API_KEY);
-          keyBtn.innerHTML = '🟢 Google API Connected';
-          showToast('✓ Official Google Maps Places & Geocoding API Connected!');
-        } catch (e) {
-          showToast('Could not verify Google API Key. Check key permissions.', true);
-        }
-      } else {
-        localStorage.removeItem('HABIS Aid_GOOGLE_API_KEY');
-        googleMapsReady = false;
-        keyBtn.innerHTML = '🔑 Connect Google API Key';
-        showToast('Switched to Keyless Google Map Road Sync Mode.');
-      }
-    });
-    locHeader.insertBefore(keyBtn, document.getElementById('useCurrentLocationBtn'));
   }
 
   document.getElementById('symptomSearchInput')?.addEventListener('input', (e) => {
@@ -916,59 +787,137 @@ function initFormAndGeocoderListeners() {
 
       document.getElementById('incidentLocationInput').value = addr;
       document.getElementById('realPlaceSearchInput').value = addr.split(',')[0];
-      document.getElementById('incidentLocationInput').classList.remove('input-invalid');
-      document.getElementById('errLocation').classList.remove('visible');
+      document.getElementById('errLocation')?.classList.remove('visible');
 
       updateIntakeCoordinates(lat, lng, zone, 'Google Map Pin Verified');
     });
   });
 
+  // PRODUCTION-GRADE REAL-TIME GPS DETECTOR (Works for all external users on Mobile & Desktop)
   document.getElementById('useCurrentLocationBtn')?.addEventListener('click', async () => {
     const gpsBtn = document.getElementById('useCurrentLocationBtn');
     gpsBtn.disabled = true;
-    gpsBtn.innerHTML = '⟳ Locking Google GPS...';
+    gpsBtn.innerHTML = '⟳ Click "Allow" on Browser Prompt...';
 
     const applyDetectedLocation = async (lat, lng, accuracyMeters, sourceName) => {
       document.getElementById('bannerGpsStatus').textContent = `Locked (${sourceName})`;
       await reverseGeocodeCoordinates(lat, lng, `${sourceName} (±${accuracyMeters}m)`);
       gpsBtn.disabled = false;
-      gpsBtn.innerHTML = `✓ GPS Locked (${sourceName})`;
-      showToast(`✓ Google Location Locked: ${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E`);
+      gpsBtn.innerHTML = `✓ GPS Locked (±${accuracyMeters}m)`;
+      showToast(`✓ Exact GPS Locked (${sourceName}): ${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E`);
     };
 
-    const getBrowserPosition = (options) =>
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.protocol !== 'file:') {
+      location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+      return;
+    }
+
+    if (!('geolocation' in navigator)) {
+      gpsBtn.disabled = false;
+      gpsBtn.innerHTML = 'Detect My Real GPS Location';
+      showToast('Your browser does not support GPS. Please type your street name in the search box.', true);
+      return;
+    }
+
+    const acquireBestHardwareGps = () =>
       new Promise((resolve, reject) => {
-        if (!('geolocation' in navigator)) {
-          reject(new Error('Geolocation not supported'));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(resolve, reject, options);
+        let bestPos = null;
+        let settled = false;
+
+        const finish = (pos) => {
+          if (settled) return;
+          settled = true;
+          navigator.geolocation.clearWatch(watchId);
+          clearTimeout(masterTimer);
+          resolve(pos);
+        };
+
+        const fail = (err) => {
+          if (settled) return;
+          settled = true;
+          navigator.geolocation.clearWatch(watchId);
+          clearTimeout(masterTimer);
+          reject(err);
+        };
+
+        const watchId = navigator.geolocation.watchPosition(
+          (pos) => {
+            gpsBtn.innerHTML = `⟳ Refining Satellite Lock (±${Math.round(pos.coords.accuracy)}m)...`;
+            if (!bestPos || pos.coords.accuracy < bestPos.coords.accuracy) {
+              bestPos = pos;
+            }
+            if (pos.coords.accuracy <= 65) {
+              finish(pos);
+            }
+          },
+          (err) => {
+            if (bestPos) {
+              finish(bestPos);
+            } else {
+              fail(err);
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 22000,
+            maximumAge: 0
+          }
+        );
+
+        const masterTimer = setTimeout(() => {
+          if (bestPos) {
+            finish(bestPos);
+          } else {
+            fail(new Error('GPS warmup timeout'));
+          }
+        }, 6500);
       });
 
     try {
-      const pos = await getBrowserPosition({ enableHighAccuracy: true, timeout: 6000, maximumAge: 20000 });
-      await applyDetectedLocation(pos.coords.latitude, pos.coords.longitude, Math.round(pos.coords.accuracy || 4), 'Google GPS');
+      const pos = await acquireBestHardwareGps();
+      await applyDetectedLocation(
+        pos.coords.latitude,
+        pos.coords.longitude,
+        Math.max(3, Math.round(pos.coords.accuracy || 8)),
+        'Live Hardware GPS'
+      );
       return;
-    } catch (e1) {}
-
-    try {
-      const pos2 = await getBrowserPosition({ enableHighAccuracy: false, timeout: 9000, maximumAge: 300000 });
-      await applyDetectedLocation(pos2.coords.latitude, pos2.coords.longitude, Math.round(pos2.coords.accuracy || 20), 'Google Wi-Fi Lock');
-      return;
-    } catch (e2) {}
-
-    try {
-      const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client');
-      const data = await res.json();
-      if (data && typeof data.latitude === 'number') {
-        await applyDetectedLocation(data.latitude, data.longitude, 45, 'Network Location Lock');
+    } catch (err1) {
+      if (err1 && err1.code === 1) {
+        gpsBtn.disabled = false;
+        gpsBtn.innerHTML = '⚠️ Location Blocked — Click to Retry';
+        showToast(
+          'Location permission was blocked! Tap the Lock 🔒 icon next to habisaid.in in your browser address bar → Set Location to "Allow" → Reload page.',
+          true
+        );
         return;
       }
-    } catch (e3) {}
+    }
 
-    await applyDetectedLocation(13.0524, 80.2508, 10, 'Chennai Central Pin');
+    try {
+      gpsBtn.innerHTML = '⟳ Locking via Wi-Fi / Cell Tower...';
+      const pos2 = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 60000
+        });
+      });
+      await applyDetectedLocation(
+        pos2.coords.latitude,
+        pos2.coords.longitude,
+        Math.round(pos2.coords.accuracy || 35),
+        'Wi-Fi / Cell Triangulation'
+      );
+      return;
+    } catch (err2) {}
+
+    gpsBtn.disabled = false;
+    gpsBtn.innerHTML = 'Detect My Real GPS Location';
+    showToast('Please enable Location Services on your device or search your street name directly.', true);
   });
 
+  // Search Input & Autocomplete
   const searchBtn = document.getElementById('searchRealPlaceBtn');
   const searchInput = document.getElementById('realPlaceSearchInput');
   const dropdown = document.getElementById('geocodeResultsDropdown');
@@ -1030,15 +979,16 @@ function initFormAndGeocoderListeners() {
   document.getElementById('resetIntakeFormBtn')?.addEventListener('click', () => {
     document.getElementById('demoScenarioSelect').value = 'blank';
     applyDemoScenario('blank');
-    showToast('Intake fields cleared for custom entry.');
+    showToast('Fields cleared for manual entry.');
   });
 
+  // Page 2 Form Submit -> Validate -> Run Quantum ECG Portal -> Auto-Dispatch on Page 3
   document.getElementById('emergencyIntakeForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     if (state.isSubmittingLock) return;
 
     if (!validateIntakeForm()) {
-      showToast('Safety Alert: Complete all mandatory caller, clinical, and location fields.', true);
+      showToast('Please complete Caller Name, 10-Digit Phone, Age Group, and at least 1 Clinical Sign.', true);
       return;
     }
 
@@ -1047,7 +997,7 @@ function initFormAndGeocoderListeners() {
 
     runCreativeAutoDispatchTransition(() => {
       executeAutomatedPriorityDispatch();
-      switchScreen('screen2');
+      switchPageInstant('page3');
       state.isSubmittingLock = false;
     });
   });
@@ -1157,7 +1107,7 @@ async function performPureGooglePlaceSearch(rawQuery, autoSelectFirst = false) {
   if (localMatches.length > 0) {
     renderGeocodeDropdownItems(localMatches);
   } else {
-    dropdown.innerHTML = `<div class="geocode-item"><strong>🔎 Searching Google Map Road Labels...</strong><span>Looking up "${sanitizeHTML(query)}"</span></div>`;
+    dropdown.innerHTML = `<div class="geocode-item"><strong>🔎 Searching Street & Landmark Index...</strong><span>Looking up "${sanitizeHTML(query)}"</span></div>`;
   }
 
   try {
@@ -1236,14 +1186,13 @@ async function performPureGooglePlaceSearch(rawQuery, autoSelectFirst = false) {
 
 function selectGeocodedLocation(lat, lng, displayAddr, zoneLabel, shortTitle = '') {
   const dropdown = document.getElementById('geocodeResultsDropdown');
-  dropdown.classList.add('hidden');
+  dropdown?.classList.add('hidden');
 
   document.getElementById('incidentLocationInput').value = displayAddr;
   if (shortTitle) {
     document.getElementById('realPlaceSearchInput').value = shortTitle;
   }
-  document.getElementById('incidentLocationInput').classList.remove('input-invalid');
-  document.getElementById('errLocation').classList.remove('visible');
+  document.getElementById('errLocation')?.classList.remove('visible');
 
   updateIntakeCoordinates(lat, lng, zoneLabel, 'Google Map Pin Locked');
   showToast(`📍 Pinned Exact Street: ${displayAddr.split(',').slice(0, 2).join(',')}`);
@@ -1263,7 +1212,7 @@ function renderGeocodeDropdownItems(items) {
       <div class="geocode-item" data-lat="${item.lat}" data-lng="${item.lng}" data-display="${sanitizeHTML(item.display)}" data-zone="${sanitizeHTML(item.zone)}" data-title="${sanitizeHTML(item.title)}">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
           <strong>📍 ${sanitizeHTML(item.title)}</strong>
-          <span style="font-family:JetBrains Mono,monospace;font-size:10.5px;color:#0d9488;font-weight:700;">${distKm} km</span>
+          <span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#0d9488;font-weight:700;">${distKm} km</span>
         </div>
         <span>${sanitizeHTML(item.display)}</span>
       </div>
@@ -1307,8 +1256,7 @@ async function reverseGeocodeCoordinates(lat, lng, sourceLabel = 'Clicked Google
 
         document.getElementById('incidentLocationInput').value = bestResult.formatted_address;
         document.getElementById('realPlaceSearchInput').value = shortStreetTitle;
-        document.getElementById('incidentLocationInput').classList.remove('input-invalid');
-        document.getElementById('errLocation').classList.remove('visible');
+        document.getElementById('errLocation')?.classList.remove('visible');
         document.getElementById('intakeSectorDisplay').textContent = `Google Sector • ${sublocalityComp || localityComp}`;
         return;
       }
@@ -1387,8 +1335,7 @@ async function reverseGeocodeCoordinates(lat, lng, sourceLabel = 'Clicked Google
 
       document.getElementById('incidentLocationInput').value = [...new Set(addressParts)].join(', ');
       document.getElementById('realPlaceSearchInput').value = primaryTitle;
-      document.getElementById('incidentLocationInput').classList.remove('input-invalid');
-      document.getElementById('errLocation').classList.remove('visible');
+      document.getElementById('errLocation')?.classList.remove('visible');
       document.getElementById('intakeSectorDisplay').textContent = `Sector • ${neighbourhood || cityOrTown}`;
       return;
     }
@@ -1396,7 +1343,7 @@ async function reverseGeocodeCoordinates(lat, lng, sourceLabel = 'Clicked Google
 }
 
 // ============================================================================
-// PURE GOOGLE MAPS TILE LAYERS (SAFE INITIALIZATION GUARD)
+// GOOGLE MAPS TILE LAYERS & SAFE MAP INITIALIZATION
 // ============================================================================
 function createKeylessTileLayer(mapInstance) {
   const googleStreets = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
@@ -1433,7 +1380,6 @@ function initIntakeMap() {
   const mapEl = document.getElementById('intakeMap');
   if (!mapEl || typeof L === 'undefined') return;
 
-  // Guard against "Map container is already initialized" error
   if (intakeMap) {
     intakeMap.remove();
     intakeMap = null;
@@ -1452,8 +1398,8 @@ function initIntakeMap() {
   const pinIcon = L.divIcon({
     className: 'custom-map-pin pin-crit',
     html: 'SOS',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    iconSize: [34, 34],
+    iconAnchor: [17, 17]
   });
 
   intakeMarker = L.marker([state.intakeLat, state.intakeLng], {
@@ -1518,7 +1464,6 @@ function applyDemoScenario(key) {
 
   document.getElementById('formErrorBanner')?.classList.add('hidden');
   document.querySelectorAll('.field-error').forEach((el) => el.classList.remove('visible'));
-  document.querySelectorAll('.input-invalid').forEach((el) => el.classList.remove('input-invalid'));
 
   renderSymptomChips();
   updateIntakeCoordinates(sc.lat, sc.lng, sc.zone, 'Scenario Verified Pin');
@@ -1533,47 +1478,39 @@ function validateIntakeForm() {
   const locationInput = document.getElementById('incidentLocationInput');
 
   if (!callerName.value.trim()) {
-    callerName.classList.add('input-invalid');
-    document.getElementById('errCallerName').classList.add('visible');
+    document.getElementById('errCallerName')?.classList.add('visible');
     valid = false;
   } else {
-    callerName.classList.remove('input-invalid');
-    document.getElementById('errCallerName').classList.remove('visible');
+    document.getElementById('errCallerName')?.classList.remove('visible');
   }
 
   const digits = callerPhone.value.replace(/\D/g, '');
   if (digits.length < 10) {
-    callerPhone.classList.add('input-invalid');
-    document.getElementById('errCallerPhone').classList.add('visible');
+    document.getElementById('errCallerPhone')?.classList.add('visible');
     valid = false;
   } else {
-    callerPhone.classList.remove('input-invalid');
-    document.getElementById('errCallerPhone').classList.remove('visible');
+    document.getElementById('errCallerPhone')?.classList.remove('visible');
   }
 
   if (!patientAge.value) {
-    patientAge.classList.add('input-invalid');
-    document.getElementById('errPatientAge').classList.add('visible');
+    document.getElementById('errPatientAge')?.classList.add('visible');
     valid = false;
   } else {
-    patientAge.classList.remove('input-invalid');
-    document.getElementById('errPatientAge').classList.remove('visible');
+    document.getElementById('errPatientAge')?.classList.remove('visible');
   }
 
   if (state.selectedSymptoms.size === 0) {
-    document.getElementById('errSymptoms').classList.add('visible');
+    document.getElementById('errSymptoms')?.classList.add('visible');
     valid = false;
   } else {
-    document.getElementById('errSymptoms').classList.remove('visible');
+    document.getElementById('errSymptoms')?.classList.remove('visible');
   }
 
   if (!locationInput.value.trim()) {
-    locationInput.classList.add('input-invalid');
-    document.getElementById('errLocation').classList.add('visible');
+    document.getElementById('errLocation')?.classList.add('visible');
     valid = false;
   } else {
-    locationInput.classList.remove('input-invalid');
-    document.getElementById('errLocation').classList.remove('visible');
+    document.getElementById('errLocation')?.classList.remove('visible');
   }
 
   const errorBanner = document.getElementById('formErrorBanner');
@@ -1622,6 +1559,7 @@ function executeAutomatedPriorityDispatch() {
   state.activeCaseId = newCase.id;
 
   updateAutoDispatchBanner(newCase, matchedUnit);
+  syncHubInspectorBar(newCase);
 
   document.getElementById('mdtUnitName').textContent = `${matchedUnit.id} • ${matchedUnit.crew}`;
   document.getElementById('mdtProtocolTier').textContent = state.protocolCode;
@@ -1643,7 +1581,7 @@ function updateAutoDispatchBanner(caseObj, unitObj) {
 }
 
 // ============================================================================
-// SCREEN 2: FLEET AVAILABILITY COUNTERS (ALS, BLS, NEONATAL, BIKE)
+// FLEET AVAILABILITY COUNTERS & QUEUE RENDERING
 // ============================================================================
 function updateFleetBreakdownCards() {
   const countByType = (type) => {
@@ -1670,8 +1608,7 @@ function updateFleetBreakdownCards() {
   document.getElementById('countBikeTotal').textContent = bike.total;
 
   const totalAvail = als.avail + bls.avail + neo.avail + bike.avail;
-  const activeDispatches = INCIDENT_CASES.filter((c) => c.unit && c.status !== 'Case closed').length;
-  document.getElementById('headerQueueBadge').textContent = `${totalAvail} Avail / ${activeDispatches} Active`;
+  document.getElementById('headerQueueBadge').textContent = `${totalAvail} Ready`;
 }
 
 function populateManualOverrideDropdown() {
@@ -1685,9 +1622,6 @@ function populateManualOverrideDropdown() {
   }).join('');
 }
 
-// ============================================================================
-// SCREEN 2: SEGREGATED QUEUES, FLEET PANEL & ER MATRIX
-// ============================================================================
 function getStatusBadgeClass(status) {
   switch (status) {
     case 'Awaiting review':
@@ -1734,7 +1668,7 @@ function renderHubQueues() {
   const filteredUnassigned = unassignedCases.filter(matchesFilter);
 
   if (filteredActive.length === 0) {
-    activeEl.innerHTML = `<div style="padding:12px;text-align:center;color:#64748b;font-size:12px;">No active dispatches match this filter.</div>`;
+    activeEl.innerHTML = `<div style="padding:14px;text-align:center;color:#64748b;font-size:13px;">No active dispatches match this filter.</div>`;
   } else {
     activeEl.innerHTML = filteredActive
       .map((c) => {
@@ -1748,8 +1682,8 @@ function renderHubQueues() {
             <div class="queue-card__loc">${c.location}</div>
             <div class="queue-card__symptoms">${c.symptoms}</div>
             <div class="queue-card__footer">
-              <span class="font-mono" style="font-size:11.5px;font-weight:700;color:#0f172a;" data-live-eta-case="${c.id}">${formatSeconds(c.etaSeconds)}</span>
-              <span style="font-size:11px;color:#475569;">ER: ${c.hospital}</span>
+              <span class="font-mono" style="font-size:12px;font-weight:700;color:#0f172a;" data-live-eta-case="${c.id}">${formatSeconds(c.etaSeconds)}</span>
+              <span style="font-size:12px;color:#475569;">ER: ${c.hospital}</span>
             </div>
           </div>
         `;
@@ -1758,7 +1692,7 @@ function renderHubQueues() {
   }
 
   if (filteredUnassigned.length === 0) {
-    unassignedEl.innerHTML = `<div style="padding:12px;text-align:center;color:#64748b;font-size:12px;">All queued calls have been assigned an ambulance.</div>`;
+    unassignedEl.innerHTML = `<div style="padding:14px;text-align:center;color:#64748b;font-size:13px;">All queued calls have been assigned an ambulance.</div>`;
   } else {
     unassignedEl.innerHTML = filteredUnassigned
       .map((c) => {
@@ -1772,7 +1706,7 @@ function renderHubQueues() {
             <div class="queue-card__loc">${c.location}</div>
             <div class="queue-card__symptoms">${c.symptoms}</div>
             <div class="queue-card__footer">
-              <span style="font-size:11px;color:#64748b;">${c.reportedTime} • ${c.priority}</span>
+              <span style="font-size:12px;color:#64748b;">${c.reportedTime} • ${c.priority}</span>
               <button type="button" class="btn--auto-assign-xs" data-auto-assign="${c.id}">
                 ⚡ Auto-Dispatch Nearest ${c.requiredTier}
               </button>
@@ -1794,9 +1728,8 @@ function renderHubQueues() {
         const uObj = AMBULANCE_FLEET.find((u) => u.id === found.unit);
         updateAutoDispatchBanner(found, uObj);
         populateManualOverrideDropdown();
-        if (tacticalMap) tacticalMap.panTo([found.lat, found.lng]);
+        navigateWithPortal('page3', `Opening Live Telemetry for ${found.id}...`);
       }
-      renderHubQueues();
     });
   });
 
@@ -1821,7 +1754,7 @@ function renderHubQueues() {
       syncHubInspectorBar(found);
       renderHubQueues();
       renderFleetPanel();
-      renderTacticalMapLayers();
+      navigateWithPortal('page3', `Auto-Dispatching ${optimalUnit.id} to ${found.id}...`);
       showToast(`⚡ Auto-Dispatched ${optimalUnit.id} (${optimalUnit.type}) to ${found.id}!`);
     });
   });
@@ -1842,7 +1775,7 @@ function syncHubInspectorBar(caseObj) {
   stEl.className = `status-badge ${getStatusBadgeClass(caseObj.status)}`;
 
   document.getElementById('hubInspectorUnit').textContent = caseObj.unit
-    ? `Unit: ${caseObj.unit} (${formatSeconds(caseObj.etaSeconds)})`
+    ? `${caseObj.unit} (${formatSeconds(caseObj.etaSeconds)})`
     : `Unassigned (Needs ${caseObj.requiredTier})`;
   document.getElementById('hubInspectorLocation').textContent = caseObj.location;
   document.getElementById('hubStatusSelect').value =
@@ -1867,16 +1800,16 @@ function renderFleetPanel() {
       (u) => `
       <div class="fleet-unit-item">
         <div>
-          <div style="display:flex;align-items:center;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
             <span class="fleet-unit-id">${u.id}</span>
-            <span style="font-size:11px;color:#475569;font-weight:700;">${u.typeLabel}</span>
+            <span style="font-size:12px;color:#475569;font-weight:700;">${u.typeLabel}</span>
           </div>
           <div class="fleet-unit-loc">${u.baseLocation}</div>
-          <div style="font-size:10.5px;color:#0d9488;font-weight:600;">${u.equipment}</div>
+          <div style="font-size:11.5px;color:#0d9488;font-weight:600;">${u.equipment}</div>
         </div>
         <div style="text-align:right;">
           <span class="fleet-avail-tag fleet-avail-tag--${u.availability}">${u.availability}</span>
-          <div class="font-mono" style="font-size:11px;color:#334155;margin-top:3px;font-weight:700;">${u.distanceKm} km (${u.etaMin}m)</div>
+          <div class="font-mono" style="font-size:12px;color:#334155;margin-top:6px;font-weight:700;">${u.distanceKm} km (${u.etaMin}m)</div>
         </div>
       </div>
     `
@@ -1988,7 +1921,7 @@ function initHubControls() {
 }
 
 // ============================================================================
-// SCREEN 2: TACTICAL CHENNAI GIS OPERATIONS MATRIX (SAFE INITIALIZATION)
+// PAGE 3: TACTICAL CHENNAI GIS OPERATIONS MATRIX
 // ============================================================================
 function initTacticalChennaiMap() {
   const mapEl = document.getElementById('tacticalChennaiMap');
@@ -2029,13 +1962,13 @@ function renderTacticalMapLayers() {
     const icon = L.divIcon({
       className: `custom-map-pin ${pinClass}`,
       html: isUnassigned ? '!' : 'SOS',
-      iconSize: [28, 28],
-      iconAnchor: [14, 14]
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
     });
 
     const marker = L.marker([c.lat, c.lng], { icon }).addTo(tacticalMarkersLayer);
     marker.bindPopup(`
-      <div style="font-family:Inter,sans-serif;min-width:210px;">
+      <div style="font-family:Plus Jakarta Sans,sans-serif;min-width:210px;">
         <strong style="color:#0f172a;">${c.id} (${c.priority})</strong><br/>
         <span style="font-size:12px;color:#334155;">${c.location}</span><br/>
         <span style="font-size:11.5px;color:#e11d48;font-weight:600;">${c.symptoms}</span><br/>
@@ -2055,7 +1988,7 @@ function renderTacticalMapLayers() {
 
     const m = L.marker([u.lat, u.lng], { icon }).addTo(tacticalMarkersLayer);
     m.bindPopup(`
-      <div style="font-family:Inter,sans-serif;">
+      <div style="font-family:Plus Jakarta Sans,sans-serif;">
         <strong>${u.id} (${u.typeLabel})</strong><br/>
         <span style="font-size:11.5px;">${u.baseLocation}</span><br/>
         <span style="font-size:11px;color:#0d9488;font-weight:700;">${u.availability} • ${u.distanceKm} km</span>
@@ -2080,7 +2013,7 @@ function renderTacticalMapLayers() {
             color: '#10b981',
             weight: 4,
             dashArray: '8, 6',
-            opacity: 0.88
+            opacity: 0.9
           }
         ).addTo(tacticalCorridorsLayer);
       }
@@ -2097,7 +2030,7 @@ function renderTacticalMapLayers() {
       });
       const hm = L.marker([h.lat, h.lng], { icon }).addTo(tacticalHospitalsLayer);
       hm.bindPopup(`
-        <div style="font-family:Inter,sans-serif;">
+        <div style="font-family:Plus Jakarta Sans,sans-serif;">
           <strong>${h.name}</strong><br/>
           <span style="font-size:11.5px;">${h.specialty}</span><br/>
           <span style="font-size:11px;color:#2563eb;font-weight:700;">${h.bedsText}</span>
